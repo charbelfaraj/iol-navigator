@@ -644,24 +644,24 @@ function DysphotopsiaDiagram() {
 function LandingPage({ onSelect }) {
   const [hp, setHp] = useState(null);
   return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', padding:'40px 20px' }}>
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', padding:'40px 24px' }}>
       <GlowOrb color="#63b3ed" size="400px" top="-100px" left="-100px" opacity={0.08} />
       <GlowOrb color="#4fd1c5" size="350px" top="60%" left="70%" opacity={0.06} />
       <GlowOrb color="#b794f4" size="300px" top="30%" left="50%" opacity={0.05} />
-      <div style={{ textAlign:'center', position:'relative', zIndex:1, maxWidth:'800px' }}>
+      <div style={{ textAlign:'center', position:'relative', zIndex:1, maxWidth:'800px', width:'100%' }}>
         <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', marginBottom:'24px' }}>
           <div style={{ width:'48px', height:'48px', borderRadius:'14px', background:'var(--gradient-primary)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px' }}>👁</div>
           <span style={{ fontFamily:'var(--font-display)', fontSize:'20px', fontWeight:700, color:'var(--text-primary)' }}>IOL Navigator</span>
         </div>
-        <h1 style={{ fontFamily:'var(--font-display)', fontSize:'clamp(32px,5vw,56px)', fontWeight:800, lineHeight:1.1, margin:'0 0 20px', background:'linear-gradient(135deg,#e8edf5 0%,#63b3ed 50%,#4fd1c5 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Intraocular Lens<br/>Decision Platform</h1>
-        <p style={{ fontFamily:'var(--font-body)', fontSize:'18px', color:'var(--text-secondary)', maxWidth:'560px', margin:'0 auto 48px', lineHeight:1.6 }}>Evidence-based IOL selection algorithms, pre-operative screening tools, and patient education — all in one comprehensive platform.</p>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'24px', maxWidth:'680px', margin:'0 auto' }}>
+        <h1 style={{ fontFamily:'var(--font-display)', fontSize:'clamp(28px,5vw,56px)', fontWeight:800, lineHeight:1.1, margin:'0 0 20px', padding:'0 8px', background:'linear-gradient(135deg,#e8edf5 0%,#63b3ed 50%,#4fd1c5 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Intraocular Lens<br/>Decision Platform</h1>
+        <p className="landing-desc" style={{ fontFamily:'var(--font-body)', color:'var(--text-secondary)', maxWidth:'560px', margin:'0 auto 48px', lineHeight:1.6 }}>Evidence-based IOL selection algorithms, pre-operative screening tools, and patient education — all in one comprehensive platform.</p>
+        <div className="landing-grid">
           {[
             { id:'ecp', icon:'🩺', title:'Eye Care Professional', desc:'Clinical algorithms, decision trees, screening checklists, formula selectors, IOL database, special cases, and resource links.', badge:'Clinical Portal' },
             { id:'patient', icon:'👤', title:'Patient Portal', desc:'Understand your IOL options with visual diagrams, take a lifestyle assessment, explore surgery timeline, and prepare questions for your surgeon.', badge:'Patient Education' },
           ].map(p=>(
             <div key={p.id} onClick={()=>onSelect(p.id)} onMouseEnter={()=>setHp(p.id)} onMouseLeave={()=>setHp(null)} style={{
-              background:hp===p.id?'var(--bg-card-hover)':'var(--bg-card)', border:`1px solid ${hp===p.id?'var(--border-active)':'var(--border-subtle)'}`, borderRadius:'var(--radius-lg)', padding:'36px 28px', cursor:'pointer', transition:'all 0.35s', transform:hp===p.id?'translateY(-4px)':'none', boxShadow:hp===p.id?'var(--shadow-elevated)':'var(--shadow-card)', textAlign:'left',
+              background:hp===p.id?'var(--bg-card-hover)':'var(--bg-card)', border:`1px solid ${hp===p.id?'var(--border-active)':'var(--border-subtle)'}`, borderRadius:'var(--radius-lg)', padding:'28px 24px', cursor:'pointer', transition:'all 0.35s', transform:hp===p.id?'translateY(-4px)':'none', boxShadow:hp===p.id?'var(--shadow-elevated)':'var(--shadow-card)', textAlign:'left',
             }}>
               <div style={{ fontSize:'40px', marginBottom:'16px' }}>{p.icon}</div>
               <Badge variant={p.id==='ecp'?'default':'warning'} small>{p.badge}</Badge>
@@ -671,7 +671,7 @@ function LandingPage({ onSelect }) {
             </div>
           ))}
         </div>
-        <p style={{ fontFamily:'var(--font-body)', fontSize:'12px', color:'var(--text-muted)', marginTop:'48px', lineHeight:1.5 }}>⚕ This tool is intended for educational and clinical decision-support purposes only. It does not replace professional clinical judgment.</p>
+        <p style={{ fontFamily:'var(--font-body)', fontSize:'12px', color:'var(--text-muted)', marginTop:'48px', lineHeight:1.5, padding:'0 8px' }}>⚕ This tool is intended for educational and clinical decision-support purposes only. It does not replace professional clinical judgment.</p>
       </div>
     </div>
   );
@@ -1035,11 +1035,495 @@ function ECPResources() {
 }
 
 // ===========================
+// ECP: QUANTITATIVE IOL ANALYZER
+// ===========================
+function ECPQuantitativeAnalyzer() {
+  const [vals, setVals] = useState({
+    scotopicPupil: '', mesopicPupil: '', angleKappa: '',
+    totalHOA: '', coma: '', trefoil: '', sphericalAb: '',
+    cornealSA: '', totalCornealAstig: '', posteriorAstig: '',
+    axialLength: '', acd: '', age: '',
+  });
+  const [analysis, setAnalysis] = useState(null);
+  const set = (k, v) => setVals(prev => ({ ...prev, [k]: v }));
+
+  const InputField = ({ label, unit, field, placeholder, note }) => (
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>{label}</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <input type="number" step="any" value={vals[field]} onChange={e => set(field, e.target.value)} placeholder={placeholder}
+          style={{ flex: 1, padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: '14px', outline: 'none', maxWidth: '160px' }} />
+        {unit && <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-muted)', minWidth: '30px' }}>{unit}</span>}
+      </div>
+      {note && <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px', fontStyle: 'italic' }}>{note}</div>}
+    </div>
+  );
+
+  const analyze = () => {
+    const sp = parseFloat(vals.scotopicPupil) || 0;
+    const mp = parseFloat(vals.mesopicPupil) || 0;
+    const ak = parseFloat(vals.angleKappa) || 0;
+    const tHOA = parseFloat(vals.totalHOA) || 0;
+    const coma = parseFloat(vals.coma) || 0;
+    const trefoil = parseFloat(vals.trefoil) || 0;
+    const sa = parseFloat(vals.sphericalAb) || 0;
+    const cSA = parseFloat(vals.cornealSA) || 0;
+    const tca = parseFloat(vals.totalCornealAstig) || 0;
+    const pa = parseFloat(vals.posteriorAstig) || 0;
+    const al = parseFloat(vals.axialLength) || 23.5;
+    const age = parseFloat(vals.age) || 65;
+
+    let flags = [];
+    let contraMF = []; // multifocal contraindications
+    let contraEDOF = [];
+    let warnings = [];
+    let recommendations = [];
+    let saMatch = '';
+
+    // === PUPIL ANALYSIS ===
+    if (sp > 0) {
+      if (sp > 6.0) { flags.push({ param: 'Scotopic Pupil', value: `${sp}mm`, level: 'danger', detail: 'Very large scotopic pupil. High risk of dysphotopsia with diffractive IOLs. Significant halos/glare expected. Strongly favor monofocal or non-diffractive EDOF (Vivity).' }); contraMF.push('Large scotopic pupil (>6.0mm)'); }
+      else if (sp > 5.0) { flags.push({ param: 'Scotopic Pupil', value: `${sp}mm`, level: 'warning', detail: 'Moderately large scotopic pupil. Increased dysphotopsia risk with diffractive multifocals. EDOF or non-diffractive designs preferred. Counsel thoroughly if proceeding with trifocal.' }); }
+      else if (sp >= 3.5) { flags.push({ param: 'Scotopic Pupil', value: `${sp}mm`, level: 'safe', detail: 'Normal range scotopic pupil. Compatible with all IOL types including diffractive multifocals.' }); }
+      else { flags.push({ param: 'Scotopic Pupil', value: `${sp}mm`, level: 'warning', detail: 'Small scotopic pupil (<3.5mm). Diffractive multifocals may underperform — less light reaches the near/intermediate zones. Enhanced monofocal or EDOF may be better options.' }); }
+    }
+    if (mp > 0) {
+      if (mp > 5.0) flags.push({ param: 'Mesopic Pupil', value: `${mp}mm`, level: 'warning', detail: 'Larger mesopic pupil increases low-light dysphotopsia. Important for driving at dusk/dawn.' });
+      else flags.push({ param: 'Mesopic Pupil', value: `${mp}mm`, level: 'safe', detail: 'Normal mesopic pupil. No additional concerns.' });
+    }
+
+    // === ANGLE KAPPA ===
+    if (ak > 0) {
+      if (ak > 0.5) { flags.push({ param: 'Angle Kappa', value: `${ak}mm`, level: 'danger', detail: 'Very large angle kappa (>0.50mm). Functional optical zone of multifocal IOL will be significantly decentered relative to the visual axis. High risk of monocular diplopia, glare, reduced contrast. AVOID diffractive multifocals. Consider monofocal, Vivity (larger functional zone), or LENTIS sector-design.' }); contraMF.push('Large angle kappa (>0.50mm)'); }
+      else if (ak > 0.4) { flags.push({ param: 'Angle Kappa', value: `${ak}mm`, level: 'warning', detail: 'Borderline-large angle kappa (0.40-0.50mm). Proceed with caution for multifocal IOLs. Trifocals with smaller optical zones are higher risk. Vivity\'s non-diffractive wavefront-shaping technology is more tolerant of kappa displacement. Consider Vivity over PanOptix/Synergy.' }); }
+      else if (ak >= 0.2) { flags.push({ param: 'Angle Kappa', value: `${ak}mm`, level: 'safe', detail: 'Normal angle kappa. Compatible with all IOL designs.' }); }
+      else { flags.push({ param: 'Angle Kappa', value: `${ak}mm`, level: 'safe', detail: 'Small angle kappa. Excellent centration expected for all IOL types.' }); }
+    }
+
+    // === HOA ANALYSIS ===
+    if (tHOA > 0) {
+      if (tHOA > 0.50) { flags.push({ param: 'Total HOA (RMS)', value: `${tHOA}µm`, level: 'danger', detail: 'Significantly elevated total HOAs (>0.50µm RMS). Diffractive IOLs will compound aberrations, severely reducing contrast sensitivity and visual quality. AVOID multifocal and diffractive EDOF. Monofocal or non-diffractive EDOF (Vivity) only.' }); contraMF.push('High total HOA (>0.50µm)'); contraEDOF.push('Diffractive EDOF'); }
+      else if (tHOA > 0.35) { flags.push({ param: 'Total HOA (RMS)', value: `${tHOA}µm`, level: 'warning', detail: 'Moderately elevated HOAs (0.35-0.50µm). Diffractive multifocals carry increased risk of visual quality complaints. EDOF or enhanced monofocal preferred. If multifocal desired, extensive counseling essential.' }); }
+      else { flags.push({ param: 'Total HOA (RMS)', value: `${tHOA}µm`, level: 'safe', detail: 'Normal total HOA levels. Compatible with all IOL designs.' }); }
+    }
+    if (coma > 0) {
+      if (coma > 0.30) { flags.push({ param: 'Coma', value: `${coma}µm`, level: 'danger', detail: 'High coma (>0.30µm). Often indicates corneal irregularity, decentered ablation, or early ectasia. Diffractive IOLs will perform poorly. Investigate underlying cause.' }); contraMF.push('High coma (>0.30µm)'); }
+      else if (coma > 0.20) { flags.push({ param: 'Coma', value: `${coma}µm`, level: 'warning', detail: 'Mildly elevated coma. May affect multifocal performance. Check topography for asymmetric bowtie or decentered ablation.' }); }
+    }
+    if (trefoil > 0) {
+      if (trefoil > 0.25) { flags.push({ param: 'Trefoil', value: `${trefoil}µm`, level: 'warning', detail: 'Elevated trefoil (>0.25µm). Can cause star-shaped patterns around lights. Check for corneal irregularity. May compound diffractive halos.' }); }
+    }
+    if (sa !== 0 && vals.sphericalAb !== '') {
+      if (Math.abs(sa) > 0.30) { flags.push({ param: 'Ocular Spherical Aberration', value: `${sa > 0 ? '+' : ''}${sa}µm`, level: 'warning', detail: `${sa > 0 ? 'Positive' : 'Negative'} spherical aberration is elevated. Affects depth of focus and contrast. Consider aspheric IOL SA target carefully.` }); }
+    }
+
+    // === CORNEAL SPHERICAL ABERRATION Z(4,0) — ASPHERIC MATCHING ===
+    if (cSA !== 0 && vals.cornealSA !== '') {
+      if (cSA >= 0.20 && cSA <= 0.32) {
+        saMatch = 'Your corneal SA is in the normal range (+0.20 to +0.32µm). A standard negative-SA IOL (e.g., AcrySof IQ at -0.20µm) will leave a small residual positive SA (+0.00 to +0.12µm), which provides some beneficial depth of focus. This is the most common and well-validated approach.';
+        flags.push({ param: 'Corneal SA Z(4,0)', value: `+${cSA}µm`, level: 'safe', detail: saMatch });
+        recommendations.push(`Corneal SA +${cSA}µm → AcrySof IQ/Clareon (-0.20µm SA) = residual +${(cSA - 0.20).toFixed(2)}µm. Alternatively, aberration-neutral IOL (TECNIS ZCB00, RayOne) preserves corneal SA profile.`);
+      } else if (cSA > 0.32) {
+        saMatch = `Higher than average corneal SA (+${cSA}µm). A negative-SA IOL (-0.20µm) will leave residual +${(cSA - 0.20).toFixed(2)}µm. Consider: (1) Full correction with aberration-free + target slight residual, or (2) Accept residual for depth of focus benefit. Avoid over-correcting into negative total SA.`;
+        flags.push({ param: 'Corneal SA Z(4,0)', value: `+${cSA}µm`, level: 'warning', detail: saMatch });
+      } else if (cSA < 0.20 && cSA > 0) {
+        saMatch = `Lower than average corneal SA (+${cSA}µm). A -0.20µm IOL would push total SA negative. Consider aberration-neutral IOL (TECNIS ZCB00, Vivinex XY1, RayOne Aspheric) to avoid inducing negative spherical aberration.`;
+        flags.push({ param: 'Corneal SA Z(4,0)', value: `+${cSA}µm`, level: 'warning', detail: saMatch });
+        recommendations.push(`Low corneal SA → prefer aberration-neutral IOL to avoid negative total SA.`);
+      } else if (cSA <= 0) {
+        saMatch = `Negative or zero corneal SA (${cSA}µm). This is atypical — may indicate previous myopic refractive surgery. Do NOT use negative-SA IOLs. Use aberration-neutral IOL only.`;
+        flags.push({ param: 'Corneal SA Z(4,0)', value: `${cSA}µm`, level: 'danger', detail: saMatch });
+        recommendations.push('Negative corneal SA (likely post-refractive surgery) → aberration-neutral IOL ONLY.');
+      }
+    }
+
+    // === ASTIGMATISM ANALYSIS ===
+    if (tca > 0) {
+      if (tca >= 1.0) { recommendations.push(`Total corneal astigmatism ${tca}D — Toric IOL strongly recommended. Use Barrett Toric Calculator with posterior corneal astigmatism input.`); }
+      else if (tca >= 0.75) { recommendations.push(`Borderline astigmatism ${tca}D — Consider toric if patient has high visual demands. Factor posterior corneal contribution (typically ~0.30D ATR).`); }
+      if (pa > 0) { recommendations.push(`Posterior corneal astigmatism measured at ${pa}D. ${tca > 0 ? `Net effect on total astigmatism: WTR anterior may be partially neutralized. Use total corneal astigmatism (TCA) from Pentacam, not just anterior SimK, for toric planning.` : ''}`); }
+    }
+
+    // === AGE FACTOR ===
+    if (age > 0) {
+      if (age < 50) warnings.push(`Young patient (${age}y). Higher visual expectations, better neuroadaptation capacity, but also longer time with the IOL. Counsel on longevity and potential future interventions.`);
+      else if (age > 80) warnings.push(`Older patient (${age}y). Neuroadaptation may be slower (4-12 months vs 3-6 months). Consider less demanding IOL design. Enhanced monofocal or Vivity may be better tolerated than trifocal.`);
+    }
+
+    // === IOL SUITABILITY SUMMARY ===
+    const hasMFContra = contraMF.length > 0;
+    const hasEDOFContra = contraEDOF.length > 0;
+    let iolSuitability = [
+      { type: 'Trifocal (PanOptix, FineVision, AT LISA tri)', suitable: !hasMFContra && sp <= 5.5 && ak <= 0.4 && tHOA <= 0.35, level: hasMFContra ? 'contra' : (sp > 5.0 || ak > 0.35 || tHOA > 0.30) ? 'caution' : 'good' },
+      { type: 'Continuous Range (TECNIS Synergy)', suitable: !hasMFContra && sp <= 5.5 && ak <= 0.45 && tHOA <= 0.40, level: hasMFContra ? 'contra' : (sp > 5.0 || ak > 0.4 || tHOA > 0.35) ? 'caution' : 'good' },
+      { type: 'Diffractive EDOF (TECNIS Symfony)', suitable: !hasEDOFContra && tHOA <= 0.45, level: hasEDOFContra ? 'contra' : (sp > 5.5 || tHOA > 0.40) ? 'caution' : 'good' },
+      { type: 'Non-Diffractive EDOF (Vivity)', suitable: true, level: (sp > 6.0 || ak > 0.5) ? 'caution' : 'good' },
+      { type: 'Enhanced Monofocal (Eyhance, RayOne EMV)', suitable: true, level: 'good' },
+      { type: 'Standard Monofocal', suitable: true, level: 'good' },
+    ];
+
+    setAnalysis({ flags, contraMF, contraEDOF, warnings, recommendations, iolSuitability });
+  };
+
+  const levelColor = { danger: 'var(--accent-rose)', warning: 'var(--accent-amber)', safe: 'var(--accent-green)', contra: 'var(--accent-rose)', caution: 'var(--accent-amber)', good: 'var(--accent-green)' };
+  const levelBg = { danger: 'rgba(252,129,129,0.06)', warning: 'rgba(246,173,85,0.06)', safe: 'rgba(104,211,145,0.06)', contra: 'rgba(252,129,129,0.06)', caution: 'rgba(246,173,85,0.06)', good: 'rgba(104,211,145,0.06)' };
+
+  return (
+    <div>
+      <SectionTitle icon="🔬" title="Quantitative IOL Analyzer" subtitle="Input actual measurements for evidence-based IOL suitability analysis" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+        <Card>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-blue)', marginBottom: '12px', textTransform: 'uppercase' }}>🔵 Pupil Measurements</div>
+          <InputField label="Scotopic Pupil Size" unit="mm" field="scotopicPupil" placeholder="e.g. 5.2" note="Measured in dim illumination (< 1 lux). Critical threshold: >5.0mm" />
+          <InputField label="Mesopic Pupil Size" unit="mm" field="mesopicPupil" placeholder="e.g. 4.0" note="Measured in low light (~3 lux). Relevant for driving conditions" />
+        </Card>
+        <Card>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-purple)', marginBottom: '12px', textTransform: 'uppercase' }}>📐 Angle Kappa / Alpha</div>
+          <InputField label="Angle Kappa (or Alpha)" unit="mm" field="angleKappa" placeholder="e.g. 0.35" note="Measured on IOLMaster/topographer. Critical threshold: >0.40mm" />
+          <InputField label="Patient Age" unit="years" field="age" placeholder="e.g. 68" note="Affects neuroadaptation speed and IOL suitability" />
+        </Card>
+        <Card>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '12px', textTransform: 'uppercase' }}>🌊 Higher-Order Aberrations</div>
+          <InputField label="Total HOA (RMS)" unit="µm" field="totalHOA" placeholder="e.g. 0.28" note="Total root-mean-square HOA. Threshold: >0.35µm = caution, >0.50µm = avoid MF" />
+          <InputField label="Coma (Z3,1)" unit="µm" field="coma" placeholder="e.g. 0.15" note="High coma (>0.30µm) = corneal irregularity flag" />
+          <InputField label="Trefoil (Z3,3)" unit="µm" field="trefoil" placeholder="e.g. 0.10" note="Elevated trefoil (>0.25µm) = starburst risk" />
+          <InputField label="Spherical Aberration (Z4,0)" unit="µm" field="sphericalAb" placeholder="e.g. 0.12" note="Total ocular SA — used for IOL SA matching" />
+        </Card>
+        <Card>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-green)', marginBottom: '12px', textTransform: 'uppercase' }}>🔄 Corneal Parameters</div>
+          <InputField label="Corneal SA Z(4,0)" unit="µm" field="cornealSA" placeholder="e.g. 0.27" note="From Pentacam/wavefront. Normal: +0.20 to +0.32µm. Used for aspheric IOL matching" />
+          <InputField label="Total Corneal Astigmatism" unit="D" field="totalCornealAstig" placeholder="e.g. 1.25" note="From Pentacam TCA — includes posterior corneal contribution" />
+          <InputField label="Posterior Corneal Astigmatism" unit="D" field="posteriorAstig" placeholder="e.g. 0.30" note="Typically ~0.30D ATR. Affects toric IOL planning significantly" />
+          <InputField label="Axial Length" unit="mm" field="axialLength" placeholder="e.g. 23.5" note="For formula context" />
+        </Card>
+      </div>
+      <button onClick={analyze} style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, padding: '14px 32px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--gradient-primary)', color: '#0a0e17', cursor: 'pointer', width: '100%', marginBottom: '24px' }}>
+        ⚡ Analyze IOL Suitability
+      </button>
+
+      {analysis && <div>
+        {/* Parameter Flags */}
+        <Card style={{ marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-blue)', marginBottom: '12px', textTransform: 'uppercase' }}>📊 Parameter Analysis</div>
+          <div style={{ display: 'grid', gap: '8px' }}>
+            {analysis.flags.map((f, i) => (
+              <div key={i} style={{ padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: levelBg[f.level], borderLeft: `4px solid ${levelColor[f.level]}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{f.param}</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <Badge variant={f.level === 'safe' ? 'success' : f.level === 'danger' ? 'danger' : 'warning'} small>{f.value}</Badge>
+                  </div>
+                </div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{f.detail}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* IOL Suitability Matrix */}
+        <Card style={{ marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-purple)', marginBottom: '12px', textTransform: 'uppercase' }}>🎯 IOL Type Suitability</div>
+          <div style={{ display: 'grid', gap: '6px' }}>
+            {analysis.iolSuitability.map((s, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: levelBg[s.level], flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>{s.type}</span>
+                <Badge variant={s.level === 'good' ? 'success' : s.level === 'contra' ? 'danger' : 'warning'} small>
+                  {s.level === 'good' ? '✓ Suitable' : s.level === 'contra' ? '✗ Contraindicated' : '⚠ Caution'}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Recommendations */}
+        {analysis.recommendations.length > 0 && <Card style={{ marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '12px', textTransform: 'uppercase' }}>💡 Specific Recommendations</div>
+          {analysis.recommendations.map((r, i) => <div key={i} style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-secondary)', padding: '6px 0', lineHeight: 1.6 }}>• {r}</div>)}
+        </Card>}
+
+        {analysis.warnings.length > 0 && <Card style={{ marginBottom: '16px', borderLeft: '4px solid var(--accent-amber)' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--accent-amber)', marginBottom: '8px', textTransform: 'uppercase' }}>⚠ Additional Considerations</div>
+          {analysis.warnings.map((w, i) => <div key={i} style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--accent-amber)', padding: '4px 0', opacity: 0.9 }}>• {w}</div>)}
+        </Card>}
+      </div>}
+    </div>
+  );
+}
+
+// ===========================
+// ECP: TORIC IOL PLANNING GUIDE
+// ===========================
+function ECPToricPlanning() {
+  const [expanded, setExpanded] = useState(null);
+  const sections = [
+    {
+      title: 'Posterior Corneal Astigmatism: The Hidden Variable',
+      icon: '🔄',
+      content: [
+        { subtitle: 'Why It Matters', text: 'The posterior cornea contributes approximately 0.30D of against-the-rule (ATR) astigmatism in most patients. Traditional keratometry (SimK) only measures the anterior corneal surface. Ignoring posterior astigmatism leads to systematic errors: over-correction of with-the-rule (WTR) astigmatism and under-correction of ATR astigmatism.' },
+        { subtitle: 'The WTR-to-ATR Flip', text: 'A patient with 1.00D of WTR anterior astigmatism may only have ~0.70D of total corneal astigmatism once posterior ATR contribution is factored in. This means a lower-power toric IOL is needed. Conversely, a patient with 1.00D ATR anterior astigmatism may have ~1.30D total — requiring a higher-power toric. This is why Pentacam/Scheimpflug-based total corneal astigmatism (TCA) is superior to SimK for toric planning.' },
+        { subtitle: 'Measurement Devices', text: 'Pentacam (Scheimpflug): Provides total corneal refractive power (TCRP) and true net power (TNP). Most widely validated for posterior corneal measurement. Galilei (dual Scheimpflug + Placido): Good correlation with Pentacam. CASIA2 (AS-OCT): High-resolution anterior segment imaging, excellent posterior surface measurement. IOLMaster 700 with TK (total keratometry): Built-in approximation of total corneal astigmatism — very practical for clinical workflow.' },
+      ]
+    },
+    {
+      title: 'Calculator Comparison: Barrett vs Manufacturer',
+      icon: '📊',
+      content: [
+        { subtitle: 'Barrett Toric Calculator', text: 'Recommended as the primary calculator. Uses a proprietary algorithm to estimate posterior corneal astigmatism even without direct measurement. Has shown superior outcomes in multiple studies. Available free at calc.apacrs.org. Accepts multiple input methods (K only, TK, or full Pentacam data). Key advantage: independent of manufacturer — can be used with any toric IOL brand.' },
+        { subtitle: 'Manufacturer Calculators', text: 'Each manufacturer provides their own toric calculator (Alcon AcrySof/Clareon, J&J TECNIS). These are calibrated specifically for their IOL models and may use different nomograms. They may not always account for posterior corneal astigmatism adequately. Use as secondary verification. Key limitation: may systematically recommend higher toric power (selling more premium product).' },
+        { subtitle: 'Best Practice Workflow', text: '1. Measure K with biometer + confirm with Pentacam/tomography. 2. Calculate with Barrett Toric Calculator (primary). 3. Cross-check with manufacturer calculator. 4. If discrepancy >0.50D of cylinder correction, investigate: is there irregular astigmatism? Is the posterior cornea atypical? 5. When in doubt, under-correct rather than over-correct — residual WTR astigmatism is better tolerated than induced ATR.' },
+      ]
+    },
+    {
+      title: 'Alignment & Marking Strategies',
+      icon: '🎯',
+      content: [
+        { subtitle: 'Intraoperative Aberrometry', text: 'ORA (Alcon) or HOLOS: Real-time aphakic and pseudophakic refraction in the OR. Can verify toric alignment and suggest adjustments. Most useful in post-refractive surgery eyes and complex cases. Adds cost and time but reduces enhancement rates.' },
+        { subtitle: 'Image-Guided Systems', text: 'VERION (Alcon), CALLISTO Eye (Zeiss), TrueGuide (J&J): Pre-operative iris registration linked to intraoperative digital overlay. Eliminates manual marking error. Accounts for cyclorotation between upright and supine positions. Becoming standard of care in premium IOL practices.' },
+        { subtitle: 'Manual Marking', text: 'Still widely used globally. Pre-op marking at slit lamp with patient seated upright (avoiding cyclotorsion error). Three-step ink marking or pendular marker. Typical accuracy: ±3-5° (vs ±1-2° for digital systems). Every 1° of misalignment = ~3.3% loss of cylinder correction. At 30° misalignment, there is ZERO correction of the original astigmatism.' },
+      ]
+    },
+    {
+      title: 'When NOT to Use a Toric IOL',
+      icon: '🚫',
+      content: [
+        { subtitle: 'Absolute Contraindications', text: 'Irregular astigmatism (topographic irregularity, keratoconus, PMD, post-RK). Corneal ectasia of any type. Unstable or progressive corneal pathology. Significant zonular instability (risk of post-op rotation exceeding 10°).' },
+        { subtitle: 'Relative Contraindications', text: 'Low astigmatism (<0.75D total corneal) — the benefit may not justify the additional cost and alignment precision needed. Asymmetric bowtie on topography — may indicate early ectasia or irregular astigmatism component. History of non-stable refraction. Pseudoexfoliation — higher long-term risk of IOL rotation.' },
+        { subtitle: 'The 0.75D Decision Point', text: 'At 0.75D of total corneal astigmatism, the decision is nuanced. Factors favoring toric: patient has high visual demands, multifocal IOL is being used (astigmatism degrades multifocal performance more than monofocal), and measurements are consistent and reliable. Factors against: cost-sensitive patient, mild astigmatism that may be well-tolerated, measurements inconsistent between visits.' },
+      ]
+    },
+  ];
+
+  return (
+    <div>
+      <SectionTitle icon="🔄" title="Toric IOL Planning Guide" subtitle="Comprehensive guide to astigmatism correction with toric IOLs" />
+      {sections.map((sec, i) => (
+        <Card key={i} hover onClick={() => setExpanded(expanded === i ? null : i)} style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>{sec.icon}</span>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, flex: 1 }}>{sec.title}</h3>
+            <span style={{ color: 'var(--text-muted)', transition: 'transform 0.3s', transform: expanded === i ? 'rotate(180deg)' : 'none' }}>▾</span>
+          </div>
+          {expanded === i && <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', display: 'grid', gap: '16px' }}>
+            {sec.content.map((c, ci) => (
+              <div key={ci}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '6px', textTransform: 'uppercase' }}>{c.subtitle}</div>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.7 }}>{c.text}</p>
+              </div>
+            ))}
+          </div>}
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ===========================
+// ECP: MIX-AND-MATCH ADVISOR
+// ===========================
+function ECPMixMatch() {
+  const [dominant, setDominant] = useState('');
+  const [goal, setGoal] = useState('');
+  const strategies = [
+    { id: 'full_bino', name: 'Bilateral Trifocal', dominantIOL: 'Trifocal (e.g., Clareon PanOptix)', nonDomIOL: 'Same trifocal', target: 'Plano OU', bestFor: 'Maximum spectacle independence at all distances', pros: ['Best binocular near and intermediate', 'Symmetric visual quality', 'Simplified counseling'], cons: ['Highest dysphotopsia risk (both eyes)', 'No fallback if patient intolerant', 'Requires excellent ocular health bilaterally'], dysphotopsia: 'High', nearVA: '★★★★★', interVA: '★★★★', distVA: '★★★★', nightDrive: '★★★' },
+    { id: 'tri_edof', name: 'Trifocal + EDOF Mix', dominantIOL: 'EDOF (Vivity or Symfony)', nonDomIOL: 'Trifocal (PanOptix or Synergy)', target: 'Plano dominant / Plano non-dominant', bestFor: 'Good range with reduced dysphotopsia vs bilateral trifocal', pros: ['Better night vision (dominant EDOF eye)', 'Still good near (non-dominant trifocal)', 'Lower dysphotopsia than bilateral trifocal'], cons: ['Some binocular summation loss', 'Near VA slightly less than bilateral trifocal', 'More complex counseling'], dysphotopsia: 'Moderate', nearVA: '★★★★', interVA: '★★★★★', distVA: '★★★★★', nightDrive: '★★★★' },
+    { id: 'edof_edof', name: 'Bilateral EDOF', dominantIOL: 'EDOF (Vivity)', nonDomIOL: 'Same EDOF', target: 'Plano OU', bestFor: 'Extended range with minimal dysphotopsia', pros: ['Excellent distance and intermediate', 'Very low halos/glare', 'Great for night drivers'], cons: ['Near reading glasses often still needed', 'Less near than trifocal options'], dysphotopsia: 'Low', nearVA: '★★★', interVA: '★★★★★', distVA: '★★★★★', nightDrive: '★★★★★' },
+    { id: 'edof_mono', name: 'EDOF + Micro-Monovision', dominantIOL: 'EDOF at plano (distance)', nonDomIOL: 'EDOF at -0.50 to -0.75D (near boost)', target: 'Plano dominant / -0.50 to -0.75D non-dominant', bestFor: 'Extended range + improved near without multifocal', pros: ['Better near than bilateral EDOF at plano', 'Maintains low dysphotopsia', 'Good depth of focus'], cons: ['Slight stereo reduction', 'May notice blur difference between eyes initially'], dysphotopsia: 'Low', nearVA: '★★★★', interVA: '★★★★★', distVA: '★★★★', nightDrive: '★★★★★' },
+    { id: 'mono_mono', name: 'Monofocal Mini-Monovision', dominantIOL: 'Monofocal at plano', nonDomIOL: 'Monofocal at -1.00 to -1.50D', target: 'Plano dominant / -1.00 to -1.50D non-dominant', bestFor: 'Patients who want some near but cannot have premium IOLs', pros: ['Zero dysphotopsia', 'Works with any ocular condition', 'Low cost', 'Tried and true approach'], cons: ['Near eye sacrifices distance clarity', 'Stereo vision reduced', 'Not all patients tolerate monovision'], dysphotopsia: 'None', nearVA: '★★★', interVA: '★★★', distVA: '★★★★★', nightDrive: '★★★★★' },
+    { id: 'synergy_vivity', name: 'Synergy + Vivity Mix', dominantIOL: 'Vivity (non-diffractive EDOF)', nonDomIOL: 'TECNIS Synergy (continuous range)', target: 'Plano OU', bestFor: 'Maximize range while keeping dominant eye sharp for distance/night', pros: ['Best of both worlds: distance/night quality + near', 'Vivity dominant = clean distance and night driving', 'Synergy non-dominant = strong near addition'], cons: ['Different optical principles in each eye', 'Cost of two premium IOLs', 'Slight binocular summation mismatch'], dysphotopsia: 'Low-Moderate', nearVA: '★★★★', interVA: '★★★★★', distVA: '★★★★★', nightDrive: '★★★★' },
+  ];
+
+  return (
+    <div>
+      <SectionTitle icon="🔀" title="Mix-and-Match Strategy Advisor" subtitle="Optimize binocular outcomes with complementary IOL combinations" />
+      <Card style={{ marginBottom: '20px', background: 'rgba(99,179,237,0.04)', borderLeft: '4px solid var(--accent-blue)' }}>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.7 }}>
+          <strong style={{ color: 'var(--text-primary)' }}>Key Principle:</strong> Always determine ocular dominance before planning any mix-and-match or monovision strategy. The dominant eye should be targeted for distance (or the "better distance" IOL). Use the hole-in-card test or Miles test for motor dominance. Consider sensory dominance testing for complex cases. ~80% of patients can adapt to some degree of anisometropia.
+        </p>
+      </Card>
+      <div style={{ display: 'grid', gap: '12px' }}>
+        {strategies.map((s, i) => (
+          <Card key={i} hover onClick={() => setGoal(goal === s.id ? '' : s.id)} style={{ borderLeft: goal === s.id ? '4px solid var(--accent-cyan)' : '4px solid transparent' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <div><div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>{s.bestFor}</div></div>
+              <Badge variant={s.dysphotopsia === 'None' || s.dysphotopsia === 'Low' ? 'success' : s.dysphotopsia === 'High' ? 'warning' : 'default'} small>Dysphotopsia: {s.dysphotopsia}</Badge>
+            </div>
+            {goal === s.id && <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', textTransform: 'uppercase' }}>Dominant Eye</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-primary)', marginTop: '4px' }}>{s.dominantIOL}</div>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-purple)', textTransform: 'uppercase' }}>Non-Dominant Eye</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-primary)', marginTop: '4px' }}>{s.nonDomIOL}</div>
+                </div>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)', padding: '12px', marginBottom: '12px' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-green)', textTransform: 'uppercase' }}>Refractive Target</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-primary)', marginTop: '4px' }}>{s.target}</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', marginBottom: '16px' }}>
+                {[{ label: 'Near', val: s.nearVA }, { label: 'Intermediate', val: s.interVA }, { label: 'Distance', val: s.distVA }, { label: 'Night Driving', val: s.nightDrive }].map((v, vi) => (
+                  <div key={vi} style={{ textAlign: 'center', padding: '8px', background: 'rgba(0,0,0,0.15)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-muted)' }}>{v.label}</div>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--accent-amber)', letterSpacing: '-1px' }}>{v.val}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: 'rgba(104,211,145,0.06)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-green)', marginBottom: '6px', textTransform: 'uppercase' }}>Pros</div>
+                  {s.pros.map((p, pi) => <div key={pi} style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-secondary)', padding: '2px 0' }}>• {p}</div>)}
+                </div>
+                <div style={{ background: 'rgba(246,173,85,0.06)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-amber)', marginBottom: '6px', textTransform: 'uppercase' }}>Cons</div>
+                  {s.cons.map((c, ci) => <div key={ci} style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-secondary)', padding: '2px 0' }}>• {c}</div>)}
+                </div>
+              </div>
+            </div>}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ===========================
+// ECP: NEUROADAPTATION RISK SCORE
+// ===========================
+function ECPNeuroadaptation() {
+  const [scores, setScores] = useState({});
+  const [result, setResult] = useState(null);
+  const set = (k, v) => setScores(prev => ({ ...prev, [k]: v }));
+
+  const factors = [
+    { id: 'age', label: 'Patient Age', options: [{ label: '<55 years', value: 1, note: 'Faster neuroadaptation, higher plasticity' }, { label: '55-70 years', value: 2, note: 'Standard adaptation timeline' }, { label: '71-80 years', value: 3, note: 'Slower adaptation, may need 6-12 months' }, { label: '>80 years', value: 4, note: 'Slowest adaptation, consider simpler IOL designs' }] },
+    { id: 'personality', label: 'Personality Type', options: [{ label: 'Easy-going / Adaptable', value: 1, note: 'Low-risk; adapts well to visual changes' }, { label: 'Practical / Moderate expectations', value: 2, note: 'Moderate risk; needs clear expectations set' }, { label: 'Perfectionist / Type A', value: 4, note: 'High-risk; may fixate on visual imperfections' }, { label: 'Anxious / Highly detail-oriented', value: 5, note: 'Highest risk; may require extensive follow-up' }] },
+    { id: 'hoa', label: 'Pre-existing HOA Level', options: [{ label: 'Low HOA (<0.30µm RMS)', value: 1, note: 'Clean optical system, good baseline' }, { label: 'Moderate HOA (0.30-0.45µm)', value: 2, note: 'Some baseline aberrations; brain already compensating' }, { label: 'High HOA (>0.45µm)', value: 4, note: 'Diffractive IOL will compound existing aberrations' }] },
+    { id: 'iol', label: 'IOL Type Being Considered', options: [{ label: 'Monofocal / Enhanced Monofocal', value: 0, note: 'Minimal neuroadaptation needed' }, { label: 'Non-diffractive EDOF (Vivity)', value: 1, note: 'Mild adaptation; mostly contrast adjustment' }, { label: 'Diffractive EDOF (Symfony)', value: 2, note: 'Moderate adaptation for halos; typically 1-3 months' }, { label: 'Trifocal / Continuous Range (PanOptix, Synergy)', value: 3, note: 'Most demanding; full adaptation 3-6 months' }] },
+    { id: 'prevSx', label: 'Previous Eye Surgery', options: [{ label: 'No previous surgery', value: 0, note: 'Clean slate' }, { label: 'Previous LASIK/PRK (successful)', value: 1, note: 'Slightly altered optical profile' }, { label: 'Previous RK or complicated surgery', value: 3, note: 'Higher optical irregularity, harder adaptation' }] },
+    { id: 'occupation', label: 'Visual Demands', options: [{ label: 'Standard (office, retired, general)', value: 0, note: 'Normal visual demands' }, { label: 'High intermediate (computer-intensive)', value: 1, note: 'Strong intermediate need; EDOF adapts well' }, { label: 'High distance + night (pilot, truck driver)', value: 3, note: 'Any dysphotopsia is professionally limiting' }, { label: 'High near (surgeon, jeweler, microscopist)', value: 2, note: 'Critical near precision required' }] },
+  ];
+
+  const calculate = () => {
+    const total = Object.values(scores).reduce((s, v) => s + v, 0);
+    let risk, color, advice;
+    if (total <= 4) { risk = 'LOW'; color = 'var(--accent-green)'; advice = 'Patient is an excellent candidate for premium IOLs. Neuroadaptation expected to be smooth and fast (2-4 weeks for most symptoms, 2-3 months for full optimization). Standard counseling is sufficient.'; }
+    else if (total <= 8) { risk = 'MODERATE'; color = 'var(--accent-amber)'; advice = 'Patient can succeed with premium IOLs but requires thorough pre-operative counseling. Set clear timeline expectations (3-6 months). Consider scheduling additional follow-up visits at 1 month and 3 months specifically to address adaptation concerns. Written information about neuroadaptation is recommended.'; }
+    else if (total <= 13) { risk = 'HIGH'; color = 'var(--accent-rose)'; advice = 'Significant neuroadaptation risk. Consider stepping down from trifocal to EDOF or non-diffractive EDOF (Vivity). If proceeding with trifocal, document extensive counseling and shared decision-making. Plan for extra postop support. The risk of dissatisfaction and IOL exchange request is elevated.'; }
+    else { risk = 'VERY HIGH'; color = 'var(--accent-rose)'; advice = 'Strong recommendation to avoid diffractive multifocal IOLs. Enhanced monofocal or Vivity (non-diffractive EDOF) are the safest premium options. Monofocal with monovision strategy is the lowest-risk approach. If patient insists on trifocal despite counseling, document thoroughly and consider having them sign a specific premium IOL consent form.'; }
+    setResult({ total, risk, color, advice, maxScore: factors.reduce((s, f) => s + Math.max(...f.options.map(o => o.value)), 0) });
+  };
+
+  return (
+    <div>
+      <SectionTitle icon="🧠" title="Neuroadaptation Risk Score" subtitle="Predict adaptation difficulty and counsel accordingly" />
+      {factors.map((f, fi) => (
+        <Card key={fi} style={{ marginBottom: '12px' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px' }}>{f.label}</div>
+          <div style={{ display: 'grid', gap: '6px' }}>
+            {f.options.map((o, oi) => {
+              const sel = scores[f.id] === o.value;
+              return (
+                <div key={oi} onClick={() => set(f.id, o.value)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: 'var(--radius-sm)', border: `1px solid ${sel ? 'var(--border-active)' : 'var(--border-subtle)'}`, background: sel ? 'rgba(99,179,237,0.08)' : 'transparent', cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <div style={{ width: '18px', height: '18px', borderRadius: '50%', border: sel ? 'none' : '2px solid var(--text-muted)', background: sel ? 'var(--accent-blue)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#fff', flexShrink: 0 }}>{sel ? '✓' : ''}</div>
+                  <div>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: sel ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{o.label}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>({o.note})</span>
+                  </div>
+                  <Badge variant={o.value <= 1 ? 'success' : o.value <= 2 ? 'default' : o.value <= 3 ? 'warning' : 'danger'} small>+{o.value}</Badge>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      ))}
+      <button onClick={calculate} style={{ fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 700, padding: '14px 32px', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--gradient-cool)', color: '#0a0e17', cursor: 'pointer', width: '100%', marginBottom: '20px' }}>🧠 Calculate Neuroadaptation Risk</button>
+      {result && <Card style={{ borderLeft: `4px solid ${result.color}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '42px', fontWeight: 800, color: result.color }}>{result.total}</div>
+          <div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-muted)' }}>out of {result.maxScore} possible</div>
+            <Badge variant={result.risk === 'LOW' ? 'success' : result.risk === 'MODERATE' ? 'warning' : 'danger'}>{result.risk} RISK</Badge>
+          </div>
+        </div>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>{result.advice}</p>
+      </Card>}
+    </div>
+  );
+}
+
+// ===========================
+// ECP: OCCUPATION-SPECIFIC PROFILES
+// ===========================
+function ECPOccupationProfiles() {
+  const [expanded, setExpanded] = useState(null);
+  const profiles = [
+    { title: 'Pilot / Airline Crew', icon: '✈', critical: 'distance + night', demands: { distance: 5, intermediate: 3, near: 2, nightVision: 5, contrastSens: 5 }, recommended: ['Monofocal at plano', 'Enhanced monofocal (Eyhance)', 'Non-diffractive EDOF (Vivity) — with caution'], avoid: ['Diffractive multifocals (halos unacceptable)', 'Diffractive EDOF (Symfony) — halos in dark cockpit'], notes: 'Aviation regulations may require specific post-op visual acuity standards. Any dysphotopsia is potentially career-ending. Monofocal with reading glasses is the safest option. Must meet CAA/FAA visual requirements. Consult aviation medical examiner before surgery.', targetRefraction: 'Plano or -0.25D for safety margin. Absolutely no intentional monovision.' },
+    { title: 'Surgeon / Dentist / Microscopist', icon: '🔬', critical: 'near + intermediate', demands: { distance: 3, intermediate: 5, near: 5, nightVision: 2, contrastSens: 4 }, recommended: ['Trifocal (if overall eye health excellent)', 'TECNIS Synergy (strong near + intermediate)', 'Bilateral EDOF + near-targeted non-dominant eye'], avoid: ['Monofocal at plano (insufficient near for professional work without glasses)', 'Excessive monovision (>-1.50D, affects stereo for surgery)'], notes: 'These professionals have highly critical near and intermediate demands. Loupes/microscopes may compensate, but uncorrected near is often desired. Near working distance varies: surgeons ~40cm, dentists ~35cm, microscopists use fixed oculars. Assess their specific working distance before IOL selection.', targetRefraction: 'Consider targeting -0.50 to -0.75D in one eye for enhanced near while maintaining good distance.' },
+    { title: 'Truck Driver / Professional Driver', icon: '🚛', critical: 'distance + night', demands: { distance: 5, intermediate: 3, near: 1, nightVision: 5, contrastSens: 4 }, recommended: ['Monofocal at plano', 'Enhanced monofocal (Eyhance)', 'Non-diffractive EDOF (Vivity)'], avoid: ['Diffractive multifocals', 'Aggressive monovision'], notes: 'Night driving with oncoming headlights is the critical scenario. Any halos or starburst can be hazardous. Regulatory visual requirements apply (varies by country). Must pass driving visual standard post-operatively. Similar considerations for taxi, rideshare, and bus drivers.', targetRefraction: 'Plano. Do not compromise distance clarity.' },
+    { title: 'Office / Computer Worker', icon: '💻', critical: 'intermediate', demands: { distance: 3, intermediate: 5, near: 3, nightVision: 2, contrastSens: 3 }, recommended: ['EDOF (Vivity, Symfony, LENTIS Comfort)', 'Trifocal if also wants near', 'Enhanced monofocal + micro-monovision'], avoid: ['Standard monofocal at plano alone (insufficient intermediate)'], notes: 'The modern office worker spends 6-10 hours at 50-80cm distance (computer screens). Intermediate vision is their primary need. EDOF lenses are ideal. Trifocal acceptable if they also want near. Consider monitor distance and multi-screen setups. Some may also need good phone/tablet distance (30-40cm).', targetRefraction: 'Plano or -0.25D to -0.50D can boost intermediate without significant distance loss.' },
+    { title: 'Artist / Designer / Photographer', icon: '🎨', critical: 'color + contrast + near', demands: { distance: 3, intermediate: 4, near: 4, nightVision: 2, contrastSens: 5 }, recommended: ['Monofocal (best contrast and color perception)', 'Non-diffractive EDOF (Vivity)', 'Enhanced monofocal'], avoid: ['Diffractive multifocals (can alter contrast perception)'], notes: 'Color accuracy and contrast sensitivity are paramount. Diffractive optics split light, reducing contrast — even mildly. Some artists report altered color perception with certain IOL materials or designs. Hydrophobic acrylic IOLs may have slight yellow tint (chromophore for UV/blue light protection) — this is usually imperceptible but some artists notice it. Clear (non-yellow) IOLs are available.', targetRefraction: 'Based on their dominant working distance. Artists working on canvas/easel = intermediate. Detail painters/jewelers = near.' },
+    { title: 'Retired / General Lifestyle', icon: '🌅', critical: 'balanced', demands: { distance: 4, intermediate: 3, near: 3, nightVision: 3, contrastSens: 3 }, recommended: ['Any IOL type — based on preference and eye health', 'Trifocal for maximum freedom', 'EDOF for balanced approach', 'Monofocal if conservative'], avoid: ['N/A — depends on eye health and tolerance'], notes: 'Most flexible group for IOL selection. Decision is primarily driven by: (1) eye health/comorbidities, (2) personal preference for spectacle independence vs visual quality, (3) hobbies and activities. Important to assess specific hobbies: golf (distance), reading (near), cooking (intermediate), crosswords (near), TV (intermediate-distance).', targetRefraction: 'Based on lifestyle assessment and IOL choice.' },
+  ];
+
+  return (
+    <div>
+      <SectionTitle icon="👔" title="Occupation-Specific Visual Profiles" subtitle="Tailor IOL selection to professional visual demands" />
+      {profiles.map((p, i) => (
+        <Card key={i} hover onClick={() => setExpanded(expanded === i ? null : i)} style={{ marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '28px' }}>{p.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)' }}>{p.title}</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-muted)' }}>Critical: {p.critical}</div>
+            </div>
+            <span style={{ color: 'var(--text-muted)', transition: 'transform 0.3s', transform: expanded === i ? 'rotate(180deg)' : 'none' }}>▾</span>
+          </div>
+          {expanded === i && <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
+            {/* Visual Demand Bars */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Visual Demand Profile</div>
+              {Object.entries(p.demands).map(([key, val]) => (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-muted)', width: '100px', textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}</span>
+                  <div style={{ flex: 1, height: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: `${val * 20}%`, height: '100%', borderRadius: '4px', background: val >= 4 ? 'var(--accent-rose)' : val >= 3 ? 'var(--accent-amber)' : 'var(--accent-green)', transition: 'width 0.5s' }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--text-muted)', width: '20px' }}>{val}/5</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ background: 'rgba(104,211,145,0.06)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-green)', marginBottom: '6px', textTransform: 'uppercase' }}>✓ Recommended</div>
+                {p.recommended.map((r, ri) => <div key={ri} style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-secondary)', padding: '2px 0' }}>• {r}</div>)}
+              </div>
+              <div style={{ background: 'rgba(252,129,129,0.06)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-rose)', marginBottom: '6px', textTransform: 'uppercase' }}>✗ Avoid</div>
+                {p.avoid.map((a, ai) => <div key={ai} style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--text-secondary)', padding: '2px 0' }}>• {a}</div>)}
+              </div>
+            </div>
+            <div style={{ background: 'rgba(99,179,237,0.06)', borderRadius: 'var(--radius-sm)', padding: '12px', marginBottom: '8px' }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', marginBottom: '4px', textTransform: 'uppercase' }}>🎯 Target Refraction</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-secondary)' }}>{p.targetRefraction}</div>
+            </div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, fontStyle: 'italic' }}>{p.notes}</div>
+          </div>}
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ===========================
 // ECP PORTAL
 // ===========================
 function ECPPortal({ onBack }) {
   const [tab,setTab]=useState('tree');
-  const tabs=[{id:'tree',label:'Decision Tree',icon:'🌳'},{id:'screening',label:'Screening',icon:'✅'},{id:'formulas',label:'Formulas',icon:'📊'},{id:'contra',label:'Exclusions',icon:'🛡'},{id:'special',label:'Special Cases',icon:'🧩'},{id:'db',label:'IOL Database',icon:'🔍'},{id:'links',label:'Resources',icon:'🔗'}];
+  const tabs=[{id:'tree',label:'Decision Tree',icon:'🌳'},{id:'analyzer',label:'Analyzer',icon:'🔬'},{id:'screening',label:'Screening',icon:'✅'},{id:'formulas',label:'Formulas',icon:'📊'},{id:'toric',label:'Toric Guide',icon:'🔄'},{id:'mixmatch',label:'Mix & Match',icon:'🔀'},{id:'neuro',label:'Neuroadapt',icon:'🧠'},{id:'occupation',label:'Occupations',icon:'👔'},{id:'contra',label:'Exclusions',icon:'🛡'},{id:'special',label:'Special Cases',icon:'🧩'},{id:'db',label:'IOL Database',icon:'🔍'},{id:'links',label:'Resources',icon:'🔗'}];
   return (
     <div style={{ minHeight:'100vh', padding:'20px' }}><div style={{ maxWidth:'960px', margin:'0 auto' }}>
       <div style={{ display:'flex', alignItems:'center', gap:'16px', marginBottom:'24px', flexWrap:'wrap' }}>
@@ -1048,7 +1532,7 @@ function ECPPortal({ onBack }) {
       </div>
       <TabBar tabs={tabs} active={tab} onChange={setTab} />
       <div style={{ marginTop:'28px' }}>
-        {tab==='tree'&&<ECPDecisionTree />}{tab==='screening'&&<ECPScreeningChecklist />}{tab==='formulas'&&<ECPFormulaSelector />}{tab==='contra'&&<ECPContraindicationsMatrix />}{tab==='special'&&<ECPSpecialCases />}{tab==='db'&&<ECPIOLComparison />}{tab==='links'&&<ECPResources />}
+        {tab==='tree'&&<ECPDecisionTree />}{tab==='analyzer'&&<ECPQuantitativeAnalyzer />}{tab==='screening'&&<ECPScreeningChecklist />}{tab==='formulas'&&<ECPFormulaSelector />}{tab==='toric'&&<ECPToricPlanning />}{tab==='mixmatch'&&<ECPMixMatch />}{tab==='neuro'&&<ECPNeuroadaptation />}{tab==='occupation'&&<ECPOccupationProfiles />}{tab==='contra'&&<ECPContraindicationsMatrix />}{tab==='special'&&<ECPSpecialCases />}{tab==='db'&&<ECPIOLComparison />}{tab==='links'&&<ECPResources />}
       </div>
     </div></div>
   );
@@ -1279,7 +1763,7 @@ function ConsentDisclaimer({ onAccept }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div style={{ position:'fixed', inset:0, zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', background:'rgba(5,8,14,0.92)', backdropFilter:'blur(12px)' }}>
-      <div style={{ maxWidth:'520px', width:'100%', background:'var(--bg-card)', border:'1px solid var(--border-subtle)', borderRadius:'var(--radius-lg)', padding:'40px 36px', boxShadow:'0 24px 80px rgba(0,0,0,0.6)', textAlign:'center', animation:'fadeIn 0.5s ease' }}>
+      <div style={{ maxWidth:'520px', width:'100%', background:'var(--bg-card)', border:'1px solid var(--border-subtle)', borderRadius:'var(--radius-lg)', padding:'clamp(24px,5vw,40px) clamp(20px,4vw,36px)', boxShadow:'0 24px 80px rgba(0,0,0,0.6)', textAlign:'center', animation:'fadeIn 0.5s ease' }}>
         <div style={{ width:'56px', height:'56px', borderRadius:'16px', background:'var(--gradient-primary)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'28px', margin:'0 auto 20px' }}>⚕</div>
         <h2 style={{ fontFamily:'var(--font-display)', fontSize:'22px', fontWeight:700, color:'var(--text-primary)', margin:'0 0 16px' }}>Important Disclaimer</h2>
         <div style={{ background:'rgba(246,173,85,0.06)', border:'1px solid rgba(246,173,85,0.15)', borderRadius:'var(--radius-md)', padding:'20px', marginBottom:'24px', textAlign:'left' }}>
@@ -1323,7 +1807,15 @@ export default function IOLNavigator() {
   const [portal,setPortal]=useState(null);
   return (
     <div style={{ ...cssVars, background:'var(--bg-deep)', minHeight:'100vh', fontFamily:'var(--font-body)', color:'var(--text-primary)', position:'relative', overflow:'hidden' }}>
-      <style>{`*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}button:hover{opacity:0.95}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}::selection{background:rgba(99,179,237,0.3)}`}</style>
+      <style>{`*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}button:hover{opacity:0.95}@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}::selection{background:rgba(99,179,237,0.3)}
+      html,body,#root{width:100%;overflow-x:hidden}
+      .landing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:680px;margin:0 auto}
+      .landing-desc{font-size:18px;padding:0 8px}
+      @media(max-width:680px){
+        .landing-grid{grid-template-columns:1fr!important}
+        .landing-desc{font-size:16px!important}
+      }
+      `}</style>
       {/* Consent Disclaimer Popup */}
       {!consented && <ConsentDisclaimer onAccept={() => setConsented(true)} />}
       {/* Main content - only accessible after consent */}
